@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shreenath Rollpress Search</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f5f5f5;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Shreenath Rollpress - Search Database</h2>
+  <input type="text" id="searchBox" placeholder="Search by name, date or amount...">
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>DATE</th>
+        <th>NAME</th>
+        <th>RS</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <script>
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSiBzHosPa1YLkVaxwwh2uHpVw0jZE4gEkSZVjif2JZeUmvBHI6I371AEVL_dSwtpFGKVCQbKHMa3zN/pub?gid=0&single=true&output=csv";
+
+    async function loadCSV() {
+      const response = await fetch(csvUrl);
+      const text = await response.text();
+      const rows = text.trim().split("\n").map(row => row.split(","));
+
+      const tableBody = document.getElementById("tableBody");
+      rows.slice(1).forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td>`;
+        tableBody.appendChild(tr);
+      });
+
+      // Add search filter
+      const searchBox = document.getElementById("searchBox");
+      searchBox.addEventListener("input", function () {
+        const query = this.value.toLowerCase();
+        const allRows = document.querySelectorAll("#dataTable tbody tr");
+
+        allRows.forEach(row => {
+          const text = row.innerText.toLowerCase();
+          row.style.display = text.includes(query) ? "" : "none";
+        });
+      });
+    }
+
+    loadCSV();
+  </script>
+
+</body>
+</html>

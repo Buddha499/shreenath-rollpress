@@ -3,81 +3,123 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Shreenath Rollpress Search</title>
+  <title>Shreenath Rollpress Data</title>
   <style>
     body {
       font-family: sans-serif;
       padding: 20px;
+      background-color: #f2f2f2;
     }
-    input[type="text"] {
+
+    h1 {
+      text-align: center;
+    }
+
+    input {
       width: 100%;
-      padding: 12px;
+      padding: 10px;
+      margin: 20px 0;
       font-size: 16px;
-      margin-bottom: 20px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
+      background: white;
     }
+
     th, td {
-      padding: 12px;
-      border: 1px solid #ddd;
+      padding: 10px;
+      border: 1px solid #ccc;
       text-align: left;
     }
+
     th {
-      background-color: #f5f5f5;
+      background-color: #333;
+      color: white;
     }
-    tr:hover {
-      background-color: #f1f1f1;
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    @media (max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      td {
+        padding-left: 50%;
+        position: relative;
+      }
+
+      td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        font-weight: bold;
+      }
     }
   </style>
 </head>
 <body>
+  <h1>Shreenath Rollpress Records</h1>
 
-  <h2>Shreenath Rollpress - Search Database</h2>
-  <input type="text" id="searchBox" placeholder="Search by name, date or amount...">
+  <input type="text" id="search" placeholder="Search by Date, Name, or Rupees..." oninput="filterData()"/>
 
-  <table id="dataTable">
+  <table>
     <thead>
       <tr>
-        <th>DATE</th>
-        <th>NAME</th>
-        <th>RS</th>
+        <th>Date</th>
+        <th>Name</th>
+        <th>Rupees</th>
       </tr>
     </thead>
-    <tbody id="tableBody"></tbody>
+    <tbody id="data"></tbody>
   </table>
 
   <script>
-    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSiBzHosPa1YLkVaxwwh2uHpVw0jZE4gEkSZVjif2JZeUmvBHI6I371AEVL_dSwtpFGKVCQbKHMa3zN/pub?gid=0&single=true&output=csv";
+    let fullData = [];
 
-    async function loadCSV() {
-      const response = await fetch(csvUrl);
-      const text = await response.text();
-      const rows = text.trim().split("\n").map(row => row.split(","));
+    async function fetchData() {
+      try {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzLNeUOhnOlG-M08NyQDfmLRCAa7DLfdkSgLlBELDEYezTNBRuo7lISrsKifNxlR-bW/exec");
+        fullData = await response.json();
+        displayData(fullData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        document.getElementById("data").innerHTML = "<tr><td colspan='3'>Failed to load data.</td></tr>";
+      }
+    }
 
-      const tableBody = document.getElementById("tableBody");
-      rows.slice(1).forEach(row => {
+    function displayData(data) {
+      const tbody = document.getElementById("data");
+      tbody.innerHTML = "";
+
+      data.forEach(row => {
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td>`;
-        tableBody.appendChild(tr);
-      });
-
-      // Add search filter
-      const searchBox = document.getElementById("searchBox");
-      searchBox.addEventListener("input", function () {
-        const query = this.value.toLowerCase();
-        const allRows = document.querySelectorAll("#dataTable tbody tr");
-
-        allRows.forEach(row => {
-          const text = row.innerText.toLowerCase();
-          row.style.display = text.includes(query) ? "" : "none";
-        });
+        tr.innerHTML = `
+          <td data-label="Date">${row.DATE}</td>
+          <td data-label="Name">${row.NAME}</td>
+          <td data-label="Rupees">${row.RUPEES}</td>
+        `;
+        tbody.appendChild(tr);
       });
     }
 
-    loadCSV();
-  </script>
+    function filterData() {
+      const search = document.getElementById("search").value.toLowerCase();
+      const filtered = fullData.filter(row =>
+        row.DATE.toLowerCase().includes(search) ||
+        row.NAME.toLowerCase().includes(search) ||
+        row.RUPEES.toLowerCase().includes(search)
+      );
+      displayData(filtered);
+    }
 
+    window.onload = fetchData;
+  </script>
 </body>
-</html> 
+</html>
